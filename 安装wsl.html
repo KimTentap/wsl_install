@@ -1,0 +1,258 @@
+<html lang="zh-CN"><head><meta charset="UTF-8"><style>.nodata  main {width:1000px;margin: auto;}</style></head><body class="nodata " style=""><div class="main_father clearfix d-flex justify-content-center " style="height:100%;"> <div class="container clearfix " id="mainBox"><main><div class="blog-content-box">
+<div class="article-header-box">
+<div class="article-header">
+<div class="article-title-box">
+<h1 class="title-article" id="articleContentId">配置VScode上基于WSL的lc3汇编语言环境</h1>
+</div>
+
+</div>
+</div>
+<div id="blogHuaweiyunAdvert"></div>
+<article class="baidu_pl">
+<div class="article_content clearfix" id="article_content">
+<link href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/editerView/kdoc_html_views-1a98987dfd.css" rel="stylesheet"/>
+<link href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/editerView/ck_htmledit_views-044f2cf1dc.css" rel="stylesheet"/>
+<div class="markdown_views prism-atom-one-light" id="content_views">
+<svg style="display: none;" xmlns="http://www.w3.org/2000/svg">
+<path d="M5,0 0,2.5 5,5z" id="raphael-marker-block" stroke-linecap="round" style="-webkit-tap-highlight-color: rgba(0, 0, 0, 0);"></path>
+</svg>
+<h2><a id="_1"></a>博客内容说明</h2>
+<h4><a id="0_wsllc3_2"></a>0. 为什么要配置wsl上的lc3环境？</h4>
+<h5><a id="01_vm_3"></a>0.1 看不惯学校给的vm</h5>
+<p>ECE120/ECE220用到了《计算机系统概论》这本书。有关于lc3汇编语言的作业。</p>
+<p>老师建议用学校封装好的linux，放在vm上跑，但我感觉vm太慢而且操作不友好。笔记本也因为内存不够的问题总是卡死，文件交互也不方便，不能直接复制帮别人检查文件。好在windows出了linux子系统（wsl），想着自己配置一个wsl的lc3环境，能省不少事。</p>
+<p>因为之前就已经在用Ubuntu子系统学linux的操作了，索性就搜了资料配置了一个环境出来。现在配置的差不多了，但是课也快上完了。算是总结一下经验，为学弟学妹们排雷了。</p>
+<h5><a id="02_wsllc3_11"></a>0.2 wsl上写lc3的利弊</h5>
+<h6><a id="advantage_13"></a>利/advantage</h6>
+<ul><li>可以用vscode或别的win端的编辑器敲代码，**代码高亮，快速文本编辑，**代码书写体验极佳。</li><li><strong>文件交互方便</strong>，通过资源管理器直接访问wsl文件系统，复制粘贴一键搞定</li><li>vscode还能配置调试任务（tasks）<br/> <strong>一键调试代码</strong>，配置一劳永逸</li><li>不用费脑子折腾万恶的vm</li></ul>
+<h6><a id="disadvantage_21"></a>弊/disadvantage</h6>
+<ul><li>需要一定的linux使用基础</li><li>配置环境需要小折腾</li><li>可能会有莫名的bug?</li><li>win和linux文件系统不兼容，不注意会有换行符的问题（都用vscode就没事</li></ul>
+<p>因为我也是从小白开始学起，很多都是参考别人的博客和教程，所以这里就不重复造轮子了，一些配置步骤就直接引用（转载）别人的文章了。</p>
+<p>我的配置：<br/> 系统：win10 1903<br/> 电脑：surface pro（第五代）</p>
+<ul><li><strong>mac</strong>本身就是Unix，用terminal就行</li><li><strong>win7</strong>因为没有Linux子系统，所以不适用本文方法，乖乖用vm跑</li></ul>
+<h4><a id="1_windowslinuxWSL_37"></a>1. 安装windows的linux子系统（WSL）</h4>
+<hr/>
+<h5><a id="11_wsl_41"></a>1.1 从零开始安装wsl</h5>
+<ol><li>快捷键 <code>win</code> + <code>i</code> 打开系统设置，更新win10到最新版本</li><li><code>win</code>键 打开开始菜单，键盘直接输入 <code>功能</code> 会出现搜索界面，点击 <code>启用或关闭windows功能</code></li><li>在弹出来的窗口的最下方，将 <code>适用于Linux的windows子系统</code> 打勾</li><li>在应用商店中搜索linux，会跳出来很多可选的子系统。随个人喜好选择，我用的是 <code>Ubuntu18.04</code></li><li>等待子系统安装好之后，打开应用，第一次初始化会挺久的，大概五分钟。<br/> <strong>初始化期间不要关掉窗口</strong> ，不然会有奇奇怪怪的问题。初始化完了会让你输入用户名和密码，确认之后就可以正常使用了。</li><li>现在wsl就装好了，这是一个区别与win系统的相对独立的操作系统。目前只有命令行界面，但之后会讲到图形界面。可以输入 <code>mkdir test</code> 来创建一个名为test的文件夹，也可以输入 <code>uname -a</code> 来查看系统信息。（linux的命令行操作可以上网自己学。）</li></ol>
+<h5><a id="12_wsl_52"></a>1.2 wsl的一些使用技巧</h5>
+<ul><li>wsl的目录可以在win的资源管理器下直接访问，路径一般是 <code>C:\Users\&lt;YOUR_USERNAME\AppData\Local\Packages\CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc\LocalState\rootfs</code> 可以直接从里面复制文件出来。但是把外面的文件复制进去会不能识别，最好在命令行中用cp命令（因为文件系统不同，linux不能识别win的文件）</li><li>wsl命令行也可以通过在cmd或者powershell中输入 <code>bash</code> 来开启</li></ul>
+<h4><a id="2_vscode_57"></a>2. 安装vscode和插件</h4>
+<hr/>
+<h5><a id="21_vscode_61"></a>2.1 安装vscode</h5>
+<p>进入<a href="https://code.visualstudio.com/" rel="nofollow">vscode官网</a>，下载最新版本的vscode，安装</p>
+<h5><a id="22__65"></a>2.2 安装插件</h5>
+<ol><li>打开vscode，左边栏第5个点进去</li><li>在最上方搜索栏输入 <code>Chinese</code> 安装搜索结果中的第一个，作者为Mircosoft的插件。</li><li>在最上方搜索栏输入 <code>remote - WSL</code> 安装搜索结果中的第一个，作者为Mircosoft的插件。</li><li>在最上方搜索栏输入 <code>LC3 Assembly</code> 安装搜索结果中作者为PaperFanz的插件。</li></ol>
+<p><img alt="请添加图片描述" src="https://img-blog.csdnimg.cn/303ad0b546f840b4b97de55852b499b7.png"><br/> <img alt="请添加图片描述" src="https://img-blog.csdnimg.cn/cd92f1287e6543dbabf0e52990309760.png"/></img></p>
+<h4><a id="3_lc3_75"></a>3. 安装lc3编译器</h4>
+<h5><a id="31__76"></a>3.1 更换镜像源</h5>
+<p>因为wsl的ubuntu发行版真的太干净了，很多正常发行版有的软件他都没有，所以需要手动把编译lc3编译器的工具装上。鉴于国内访问外往速度较慢，我们先把镜像源换成阿里云镜像。</p>
+<p>熟悉linux操作的直接进入/etc/apt/文件夹，把当前source.list备份成source.list.backup，再用vim或nano将下面的内容覆盖原文件</p>
+<p>看不懂上面一句的，打开资源管理器，进入<code>C:\Users\YOUR_USERNAME\AppData\Local\Packages\CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc\LocalState\rootfs\etc\apt</code> （用你的用户名代替YOUR_USERNAME）用vscode打开 <code>source.list</code> 文件，注释当前全部内容（ <code>ctrl + A</code> , <code>ctrl + /</code>），再把下面的内容复制进去，保存。</p>
+<pre><code class="prism language-bash">    <span class="token comment"># 阿里源</span>
+    deb http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic main restricted universe multiverse
+    
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-security main restricted universe multiverse
+    
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-updates main restricted universe multiverse
+    
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-proposed main restricted universe multiverse
+    
+    deb http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+    deb-src http://mirrors.aliyun.com/ubuntu/ bionic-backports main restricted universe multiverse
+</code></pre>
+<p>进入命令行，输入下面这行命令就能更新镜像源，获得速度加成了。</p>
+<pre><code>sudo apt-get update
+</code></pre>
+<h5><a id="32__104"></a>3.2 安装组件</h5>
+<p>linux安装软件很方便，只需要一行命令，这里我们安装wish gcc flex unzip wget这5个软件。打开命令行，输入</p>
+<pre><code class="prism language-bash">    <span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> wish gcc flex <span class="token function">unzip</span> <span class="token function">wget</span>
+</code></pre>
+<p>输入密码再确认就可以了。</p>
+<p>换成阿里源速度基本是原来的10倍（网好的话可能是100倍）。</p>
+<h5><a id="33_lc3_115"></a>3.3 安装lc3编译器</h5>
+<p>具体安装就参照这一篇文章吧，写的很详细</p>
+<p><a href="https://blog.csdn.net/STURobotic/article/details/88909744"></a></p>
+<p>补充一下：</p>
+<ul><li>强烈建议查看<a href="http://highered.mheducation.com/sites/0072467509/student_view0/index.html" rel="nofollow">官网的说明文档</a>，有详细的使用说明，可以解决很多问题</li><li>下载及解压两个源文件可以用以下命令</li></ul>
+<pre><code class="prism language-bash">    <span class="token comment"># 下载lc3仿真器及编译工具</span>
+    <span class="token function">wget</span> http://highered.mheducation.com/sites/dl/free/0072467509/104652/lc3tools_v12.zip
+    <span class="token comment"># 下载c语言转lc3汇编语言转换器工具</span>
+    <span class="token function">wget</span> http://highered.mheducation.com/sites/dl/free/0072467509/104652/lcc.zip
+    <span class="token comment"># 解压压缩包</span>
+    <span class="token function">unzip</span> lc3tools_v12.zip
+    <span class="token function">unzip</span> lcc.zip
+</code></pre>
+<h4><a id="4_vscodeWSL_134"></a>4. 在vscode上远程打开WSL</h4>
+<hr/>
+<h5><a id="41_vscodewsl_138"></a>4.1 现在尝试用vscode连接wsl</h5>
+<p><img alt="请添加图片描述" src="https://img-blog.csdnimg.cn/c63284e7b83741b0b52c9bb0e815f3c1.png"><br/> <img alt="请添加图片描述" src="https://img-blog.csdnimg.cn/7a14c9fc548d42e4a3b1b285a53c88aa.png"/></img></p>
+<ol><li>打开vscode，如果你已经安装了 <strong>remote - WSL</strong> 的话，左下角会有 <code>&gt;&lt;</code> 符号，点击后在下拉栏选择 <code>New Windows</code></li><li>在弹出的新窗口中：打开vscode资源管理器（左侧栏第一个）→ <code>打开文件夹</code> → 在下拉栏中选择你要用来存放lc3相关文件的文件夹。成功打开之后，所有操作基本与编辑windows系统下的文件相同。</li></ol>
+<h3><a id="42__147"></a>4.2 一些操作细节</h3>
+<ul><li>文件的复制、移动、删除等操作可以子啊左侧资源管理器里，通过拖拽完成。delete是 <strong>永久删除</strong> 不能恢复。在windows资源管理器中（<code>C:\Users\YOUR_USERNAME\AppData\Local\Packages\CanonicalGroupLimited.UbuntuonWindows_79rhkp1fndgsc\LocalState\rootfs</code>）复制移动后，可能在wsl中不能识别而没有显示。</li><li>linux系统和windows系统的换行符不同。简单来说就是 
+  <ul><li>在linux系统下，右下角一排中选择 <code>LF</code></li><li>在windows系统下，右下角一排中用 <code>CRLF</code></li></ul> </li></ul>
+<h4><a id="5_vscodelc3_154"></a>5. 在vscode上写lc3汇编语言</h4>
+<hr/>
+<ol><li>在远程wsl模式下的vscode中，打开 <code>扩展（左侧栏四个小方形那个）</code>，把之前安装的三个插件 <code>install in WSL</code></li><li>打开vscode资源管理器，新建一个文件test.asm，注意以.asm扩展名结尾。</li><li>打开这个文件，就能快乐的用vscode写lc3了。从此<strong>多行复制，代码片段，语法高亮，TODO tree</strong>都有了，而且启动嗖嗖的快，颜值唰唰滴高。vm有生灵倒悬之急，岂不美哉？</li></ol>
+<h4><a id="6_vscodelc3_163"></a>6. 在vscode上调试lc3程序【重点】❗</h4>
+<h5><a id="61_lc3_164"></a>6.1 lc3的编译过程</h5>
+<p>想要调试lc3，首先要知道他是怎么工作的。这也是学习lc3的一部分。</p>
+<p>你写的汇编伪代码会经过两轮pass，生成.sym和.obj文件。.obj文件（也就是机器码）再被lc3sim仿真器读取，由仿真器来模拟lc3执行代码的过程。</p>
+<p>因此，一般而言，调试lc3汇编代码需要两行命令， <code>lc3as test.asm</code> 和 <code>lc3sim test.obj</code> 有时候需要打印输出还要 <code>lc3sim -s testcommand &gt; myoutfile</code> 等等。可是这些重复的输入能不能简单一点呢？</p>
+<p>当然可以，这里就用到了vscode的“tasks”功能，把重复的工作化简。</p>
+<h5><a id="62_tasks_174"></a>6.2 用tasks化简调试过程</h5>
+<p>你可以把vscode的tasks看作是<strong>一键执行预定脚本</strong>的功能。把调试命令设置好后，只需要一键就可以重复调用。具体操作如下</p>
+<ol><li>若你没有改过快捷键绑定，在文本编辑界面 <code>ctrl + shift + B</code> 就会弹出配置任务（tasks）的下拉栏 → 配置任务 → Others。一个名为tasks.json的文件会创建在.vscode文件夹内，这是vscode放置当前工作区配置的文件夹，不要删去。</li><li>在这个用下面的代码覆盖里面的内容，把注释的地方改成自己对应安装的。</li></ol>
+<pre><code class="prism language-json">        <span class="token punctuation">{<!-- --></span>
+            <span class="token comment">// See https://go.microsoft.com/fwlink/?LinkId=733558</span>
+            <span class="token comment">// for the documentation about the tasks.json format</span>
+            <span class="token string-property property">"version"</span><span class="token operator">:</span> <span class="token string">"2.0.0"</span><span class="token punctuation">,</span>
+            <span class="token string-property property">"tasks"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                <span class="token punctuation">{<!-- --></span>
+                    <span class="token string-property property">"label"</span><span class="token operator">:</span> <span class="token string">"lc3as asmble"</span><span class="token punctuation">,</span>              <span class="token comment">//之后调用时显示的名字</span>
+                    <span class="token string-property property">"type"</span><span class="token operator">:</span> <span class="token string">"shell"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"command"</span><span class="token operator">:</span> <span class="token string">"$HOME/bin/lc3as"</span><span class="token punctuation">,</span>       <span class="token comment">//改成你的lc3as的路径</span>
+                    <span class="token string-property property">"args"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                        <span class="token string">"${fileBasename}"</span>               <span class="token comment">//command+args就是你给命令行的信号，这里相当于lc3as test.asm</span>
+                    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"options"</span><span class="token operator">:</span> <span class="token punctuation">{<!-- --></span>
+                        <span class="token string-property property">"cwd"</span><span class="token operator">:</span> <span class="token string">"${fileDirname}"</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"presentation"</span><span class="token operator">:</span> <span class="token punctuation">{<!-- --></span>
+                        <span class="token string-property property">"echo"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"reveal"</span><span class="token operator">:</span> <span class="token string">"always"</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"focus"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"panel"</span><span class="token operator">:</span> <span class="token string">"shared"</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"showReuseMessage"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"clear"</span><span class="token operator">:</span> <span class="token boolean">false</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"group"</span><span class="token operator">:</span> <span class="token string">"build"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"problemMatcher"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token punctuation">{<!-- --></span>
+                    <span class="token string-property property">"label"</span><span class="token operator">:</span> <span class="token string">"lc3sim simulate"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"type"</span><span class="token operator">:</span> <span class="token string">"shell"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"command"</span><span class="token operator">:</span> <span class="token string">"$HOME/bin/lc3sim"</span><span class="token punctuation">,</span>          <span class="token comment">//改成你的lc3sim的路径</span>
+                    <span class="token string-property property">"args"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                        <span class="token string">"${fileBasenameNoExtension}.obj"</span>    <span class="token comment">//这里相当于lc3sim test.obj</span>
+                    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"options"</span><span class="token operator">:</span> <span class="token punctuation">{<!-- --></span>
+                        <span class="token string-property property">"cwd"</span><span class="token operator">:</span> <span class="token string">"${fileDirname}"</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"presentation"</span><span class="token operator">:</span> <span class="token punctuation">{<!-- --></span>
+                        <span class="token string-property property">"echo"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"reveal"</span><span class="token operator">:</span> <span class="token string">"always"</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"focus"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"panel"</span><span class="token operator">:</span> <span class="token string">"shared"</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"showReuseMessage"</span><span class="token operator">:</span> <span class="token boolean">true</span><span class="token punctuation">,</span>
+                        <span class="token string-property property">"clear"</span><span class="token operator">:</span> <span class="token boolean">true</span>
+                    <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"group"</span><span class="token operator">:</span> <span class="token string">"build"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"problemMatcher"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token punctuation">{<!-- --></span>
+                    <span class="token string-property property">"label"</span><span class="token operator">:</span> <span class="token string">"lc3 CLI debug"</span><span class="token punctuation">,</span>                  <span class="token comment">//这个task用来整合上面两个tasks，能一键编译加调试</span>
+                    <span class="token string-property property">"type"</span><span class="token operator">:</span> <span class="token string">"shell"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"dependsOrder"</span><span class="token operator">:</span> <span class="token string">"sequence"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"dependsOn"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                        <span class="token string">"lc3as asmble"</span><span class="token punctuation">,</span>
+                        <span class="token string">"lc3sim simulate"</span>
+                    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"group"</span><span class="token operator">:</span> <span class="token string">"build"</span><span class="token punctuation">,</span>
+                    <span class="token string-property property">"problemMatcher"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">]</span>
+        <span class="token punctuation">}</span>
+</code></pre>
+<ol start="3"><li>这样一来，回到文本编辑的地方就可以通过按下<code>ctrl + shift + B</code> 来调用tasks啦。调用成功???</li></ol>
+<h5><a id="63__244"></a>6.3 调试的注意事项</h5>
+<ol><li>建议先用lc3 asmble测试编译，到编译成功后再用lc3sim来调试。<br/> 因为直接用lc3sim相当于连着使用了lc3 asmble和lc3 simulate两个tasks，这样lc3as的输出会一闪而过，如果编译没有成功的话，.obj文件没有更新，调试的仍是修改前代码对应的.obj文件。</li><li>用lc3sim调试完了之后，<strong>记得用 <code>quit</code> 命令退出</strong>，不然下一次不会进入新文件的调试环境。</li><li>有测试文件或输出要求的也可以实现，就是新建几个对应命令的tasks，再用类似lc3sim的task连接起来。</li><li>tasks文件的具体书写规则上?<a href="https://code.visualstudio.com/docs/editor/tasks#vscode" rel="nofollow">官方文档</a>看吧（不愿意看英文的可以 <s>换一个脑子</s> 用chrome网页翻译代替）。用好了能有骚操作，对别的语言也是如此。</li><li>不知道能不能用debug功能实现和lc3sim的对接，没有研究，要是可以的话就能F5一键调试了。但是断点好像不能传递给lc3sim。?反正我学完lc3了，以后都不用了，不折腾了。而且现在也挺方便。</li></ol>
+<h4><a id="7_vscodelc3_253"></a>7. 通过vscode可视化调试lc3程序【重点】❗❗</h4>
+<hr/>
+<p>单单把命令行的调试界面整合到vscode中似乎还不够方便，用vm的同学一个 <code>lc3sim-tk</code> 的图形化界面就把黑底白字的命令行比下去了。那既然都是重复调用命令，能不能也用tasks来启动图形化的调试界面呢？</p>
+<h5><a id="71_win10_259"></a>7.1 win10子系统的图形化界面</h5>
+<blockquote>
+<p>2023更新，wsl2似乎更新了自带的gui界面，可以尝试不安装xming直接启动。若失败在安装。</p>
+</blockquote>
+<ol><li> <p>具体的方法就参照<a href="http://baijiahao.baidu.com/s?id=1596652006568524478&amp;wfr=spider&amp;for=pc" rel="nofollow">这篇教程</a>来就行了。推荐使用第二个方法，也就是xming方案。这样可以让弹出的窗口和win的窗口并列，沉浸式的debug体验极佳。</p> <p><a href="http://baijiahao.baidu.com/s?id=1596652006568524478&amp;wfr=spider&amp;for=pc" rel="nofollow">Win10子系统安装图形化界面的两种方法</a></p> </li><li> <p>总结一下这篇教程里的具体命令操作，方便以后回看</p> </li></ol>
+<pre><code class="prism language-bash">        <span class="token comment">#第一种方法（远程桌面）</span>
+        <span class="token function">sudo</span> <span class="token function">apt-get</span> update
+        <span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> xorg xfce4 xrdp
+        <span class="token function">sudo</span> <span class="token function">sed</span> <span class="token parameter variable">-i</span> <span class="token string">'s/port=3389/port=3390/g'</span> /etc/xrdp/xrdp.ini
+        <span class="token function">sudo</span> <span class="token builtin class-name">echo</span> xfce4-session <span class="token operator">&gt;</span>~/.xsession
+        <span class="token function">sudo</span> <span class="token function">service</span> xrdp restart
+        <span class="token comment">#win自带的远程桌面连接到127.0.0.1:3390，127.0.0.1是本地机器的回送ip地址。</span>
+        
+        <span class="token comment">#第二种方法</span>
+        <span class="token function">sudo</span> <span class="token function">apt-get</span> update
+        <span class="token function">sudo</span> <span class="token function">apt-get</span> <span class="token function">install</span> xorg xfce4 openssh-server
+        <span class="token comment">#windows安装xming，启动xming</span>
+        <span class="token environment constant">DISPLAY</span>:<span class="token operator">=</span><span class="token number">0</span> lc3sim-tk    <span class="token comment">#跟着你要启动的图形化程序命令</span>
+        <span class="token comment">#就可以在win中弹出linux的图形化窗口了</span>
+</code></pre>
+<ol start="3"><li>一些小技巧 
+  <ol><li>进入xming launch可以选择不同的窗口显示方式。</li><li>进入~/.bashrc，添加 <code>alias D='DISPLAY:=0'</code> ，可以把DISPLAY:=0化简成“D”，以后就可以用 <code>D lc3sim-tk</code> 来启动了</li></ol> </li></ol>
+<h5><a id="72_vscode_288"></a>7.2 用vscode启动图形化调试界面</h5>
+<p>原理还是一样，用tasks来代替重复输入命令。把下面的代码复制到tasks.json文件前几个tasks的后面，就可以了。</p>
+<pre><code class="prism language-json">            <span class="token punctuation">{<!-- --></span>
+                <span class="token string-property property">"label"</span><span class="token operator">:</span> <span class="token string">"lc3sim-tk simulate"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"type"</span><span class="token operator">:</span> <span class="token string">"shell"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"command"</span><span class="token operator">:</span> <span class="token string">"DISPLAY=:0"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"args"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token string">"/home/gavin/bin/lc3tools/lc3sim-tk"</span><span class="token punctuation">,</span>  <span class="token comment">//改成你的lc3sim-tk的路径</span>
+                    <span class="token string">"${fileBasenameNoExtension}.obj"</span>       <span class="token comment">//这里相当于DISPLAY:=0 lc3sim-tk test.obj</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"options"</span><span class="token operator">:</span> <span class="token punctuation">{<!-- --></span>
+                    <span class="token string-property property">"cwd"</span><span class="token operator">:</span> <span class="token string">"${fileDirname}"</span>
+                <span class="token punctuation">}</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"presentation"</span><span class="token operator">:</span> <span class="token punctuation">{<!-- --></span>
+                    <span class="token string-property property">"echo"</span><span class="token operator">:</span> <span class="token boolean">false</span><span class="token punctuation">,</span>                         <span class="token comment">//因为是图形化界面，所以就不用显示命令行的输出了</span>
+                    <span class="token string-property property">"reveal"</span><span class="token operator">:</span> <span class="token string">"never"</span>
+                <span class="token punctuation">}</span>
+                <span class="token string-property property">"group"</span><span class="token operator">:</span> <span class="token string">"build"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"problemMatcher"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">,</span>
+            <span class="token punctuation">}</span><span class="token punctuation">,</span>
+            <span class="token punctuation">{<!-- --></span>
+                <span class="token string-property property">"label"</span><span class="token operator">:</span> <span class="token string">"lc3 tk debug"</span><span class="token punctuation">,</span>                  <span class="token comment">//这个task用来整合上编译和图形化的界面，能一键编译加调试</span>
+                <span class="token string-property property">"type"</span><span class="token operator">:</span> <span class="token string">"shell"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"dependsOrder"</span><span class="token operator">:</span> <span class="token string">"sequence"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"dependsOn"</span><span class="token operator">:</span> <span class="token punctuation">[</span>
+                    <span class="token string">"lc3as asmble"</span><span class="token punctuation">,</span>
+                    <span class="token string">"lc3sim-tk simulate"</span>
+                <span class="token punctuation">]</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"group"</span><span class="token operator">:</span> <span class="token string">"build"</span><span class="token punctuation">,</span>
+                <span class="token string-property property">"problemMatcher"</span><span class="token operator">:</span> <span class="token punctuation">[</span><span class="token punctuation">]</span>
+            <span class="token punctuation">}</span>
+</code></pre>
+<p>至此，图形化就完成了，所有vm中的所有功能关于lc3都能在vscode中实现了。</p>
+<hr/>
+</div>
+<link href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/editerView/markdown_views-f23dff6052.css" rel="stylesheet"/>
+<link href="https://csdnimg.cn/release/blogv2/dist/mdeditor/css/style-c216769e99.css" rel="stylesheet"/>
+</div>
+<div id="treeSkill"></div>
+</article>
+<script>
+  $(function() {
+    setTimeout(function () {
+      var mathcodeList = document.querySelectorAll('.htmledit_views img.mathcode');
+      if (mathcodeList.length > 0) {
+        for (let i = 0; i < mathcodeList.length; i++) {
+          if (mathcodeList[i].naturalWidth === 0 || mathcodeList[i].naturalHeight === 0) {
+            var alt = mathcodeList[i].alt;
+            alt = '\\(' + alt + '\\)';
+            var curSpan = $('<span class="img-codecogs"></span>');
+            curSpan.text(alt);
+            $(mathcodeList[i]).before(curSpan);
+            $(mathcodeList[i]).remove();
+          }
+        }
+        MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+      }
+    }, 1000)
+  });
+</script>
+</div></html>
